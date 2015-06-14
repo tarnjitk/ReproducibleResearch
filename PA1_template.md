@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 #
 
@@ -18,12 +13,70 @@ It is now possible to collect a large amount of data about personal movement usi
 The source of the data used in this study is provided by this link 
 [https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip]
 
-```{r echo = TRUE}
+
+```r
         require(dplyr)
+```
+
+```
+## Loading required package: dplyr
+## 
+## Attaching package: 'dplyr'
+## 
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+## 
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
         require(ggplot2)
+```
+
+```
+## Loading required package: ggplot2
+```
+
+```r
         require(data.table)
+```
+
+```
+## Loading required package: data.table
+## 
+## Attaching package: 'data.table'
+## 
+## The following objects are masked from 'package:dplyr':
+## 
+##     between, last
+```
+
+```r
         require(scales)
+```
+
+```
+## Loading required package: scales
+```
+
+```r
         require(lubridate)
+```
+
+```
+## Loading required package: lubridate
+## 
+## Attaching package: 'lubridate'
+## 
+## The following objects are masked from 'package:data.table':
+## 
+##     hour, mday, month, quarter, wday, week, yday, year
+```
+
+```r
         activityData <- read.csv("activity.csv", 
                                  header = TRUE, 
                                  na.strings = "NA",
@@ -42,7 +95,8 @@ The source of the data used in this study is provided by this link
 
 ### The mean total number of steps taken per day
 
-```{r}
+
+```r
         meanStepsPerDay <- tapply(activityDT$steps, activityDT$date, mean)
         sumStepsPerDay <- tapply(activityDT$steps, activityDT$date, sum)
         hist(sumStepsPerDay, breaks = 50,
@@ -51,19 +105,32 @@ The source of the data used in this study is provided by this link
           xlab = "Total number of steps taken each day")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png) 
+
 The distribution of the total number of steps taken per day appear to follow normal behaviour, where the mean of the total number of steps taken per day is 
-```{r}
+
+```r
          mean(sumStepsPerDay, na.rm = TRUE)
+```
+
+```
+## [1] 10766.19
 ```
 and median number of steps taken each day is
 
-```{r}
+
+```r
          median(sumStepsPerDay, na.rm = TRUE)
+```
+
+```
+## [1] 10765
 ```
 
 In order to explore the variation of the mean and median of the total number of steps taken per day
 
-```{r}
+
+```r
         meanPerDay <- aggregate(activityDT$steps, by = list(activityDT$date), 
                        mean)
         colnames(meanPerDay) <- c("date","meanSteps")
@@ -72,35 +139,71 @@ In order to explore the variation of the mean and median of the total number of 
         colnames(medianPerDay) <- c("date","medianSteps")
 
 ggplot(meanPerDay, aes(x=date, y=meanSteps))  + geom_bar(stat="identity", fill="lightblue", colour="lightblue")
-       
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
 
 
 ### The average daily activity pattern
 In order to depict the average daily activity pattern, a time series graph of the average steps through the time-span of a day, that is, the mean number of steps for each of the 5 minute time intervals over the 24 hour period, is presented.
 Here the summary variable is the number of steps and the grouping variable is the interval.
 
-```{r}
-        
+
+```r
         activityTimeSeries <- aggregate(activityDT$steps, by = list(activityDT$interval), 
                         mean)
         colnames(activityTimeSeries) <- c("Time", "MeanNumberOfSteps")
         activityTimeSeries$Time <- activityTimeSeries$Time/100 # to convert the time interval to hours
         head(activityTimeSeries)
+```
+
+```
+##   Time MeanNumberOfSteps
+## 1 0.00         1.7169811
+## 2 0.05         0.3396226
+## 3 0.10         0.1320755
+## 4 0.15         0.1509434
+## 5 0.20         0.0754717
+## 6 0.25         2.0943396
+```
+
+```r
         tail(activityTimeSeries)
+```
+
+```
+##      Time MeanNumberOfSteps
+## 283 23.30         2.6037736
+## 284 23.35         4.6981132
+## 285 23.40         3.3018868
+## 286 23.45         0.6415094
+## 287 23.50         0.2264151
+## 288 23.55         1.0754717
+```
+
+```r
         ggplot(activityTimeSeries, aes(x=Time, y=MeanNumberOfSteps)) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
+
 
 The 5-minute interval, on average across all the days in the dataset, which contains the maximum number of steps is at 8.35 in the morning, as given by
-```{r}
+
+```r
         print(activityTimeSeries[which.max(activityTimeSeries$MeanNumberOfSteps),])
+```
+
+```
+##     Time MeanNumberOfSteps
+## 104 8.35          206.1698
 ```
 
 
 ### The difference in activity patterns between weekdays and weekends
 
-```{r}
+
+```r
         weekend <- c("Sunday","Saturday")
         activityDTWE <- activityDT[which(dayOfWeek == weekend),]
         activityTimeSeriesWE <- aggregate(activityDTWE$steps, by = list(activityDTWE$interval), 
@@ -110,6 +213,14 @@ The 5-minute interval, on average across all the days in the dataset, which cont
 
         weekday <- c("Monday","Tuesday", "Wednesday","Thursday","Friday")
         activityDTWD <- activityDT[which(dayOfWeek == weekday),]
+```
+
+```
+## Warning in dayOfWeek == weekday: longer object length is not a multiple of
+## shorter object length
+```
+
+```r
         activityTimeSeriesWD <- aggregate(activityDTWD$steps, by = list(activityDTWD$interval), 
                         mean)
         colnames(activityTimeSeriesWD) <- c("Time", "MeanNumberOfStepsWD")
@@ -118,9 +229,15 @@ The 5-minute interval, on average across all the days in the dataset, which cont
 #        head(activityTimeSeriesWE)
 #        tail(activityTimeSeriesWE)
         ggplot(activityTimeSeriesWD, aes(x=Time, y=MeanNumberOfStepsWD)) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") 
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
+
+```r
         ggplot(activityTimeSeriesWE, aes(x=Time, y=MeanNumberOfSteps)) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") 
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-8-2.png) 
 
 
 
