@@ -26,7 +26,7 @@ The source of the data used in this study is provided by this link
                                  na.strings = "NA",
                                  stringsAsFactors=FALSE)
 
-        activityData <- data.table(activityData)
+        activityData1 <- data.table(activityData)
         activityData$date <- as.Date(activityData$date, "%Y-%m-%d") 
         dayOfWeek <- weekdays(activityData$date)
         activityData <- mutate(activityData, dayOfWeek)
@@ -79,6 +79,7 @@ The 5-minute interval, on average across all the days in the dataset, which cont
 
 ### The difference in activity patterns between weekdays and weekends
 
+The graph below depicts the difference in the weekday (red plot) and weekend (blue) activity patterns.
 ```{r}
         weekend <- c("Sunday","Saturday")
         activityDTWE <- activityData[which(dayOfWeek == weekend),]
@@ -99,26 +100,12 @@ The 5-minute interval, on average across all the days in the dataset, which cont
         ggplot(activityTimeSeries, aes(x=Time, y=MeanNumberOfStepsWD, color = "red")) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") +   geom_line(aes(x=Time, y=MeanNumberOfStepsWE, color = "blue")) + scale_colour_discrete(name  ="dayOfWeek", breaks=c("weekday", "weekend"), labels=c("Woman", "Man")) 
 ```
 
-
+The total number of missing values in the dataset (i.e. the total number of rows with NAs) are 
 
 ```{r}
-
+        numOfMissing <- sum(is.na(activityData1$steps))
+        print(numOfMissing)
 ```
-
-
-Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
-
-Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
-
-Create a new dataset that is equal to the original dataset but with the missing data filled in.
-
-Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
-
-Are there differences in activity patterns between weekdays and weekends?
-
-For this part the weekdays() function may be of some help here. Use the dataset with the filled-in missing values for this part.
-
-Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 
 
 
