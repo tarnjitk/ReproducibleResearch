@@ -1,14 +1,10 @@
 ---
 title: 'Reproducible Research: Peer Assessment 1'
 output:
-  pdf_document: default
   html_document:
     keep_md: yes
+  pdf_document: default
 ---
-
-#
-
-## Abstract
 
 ## Introduction
 
@@ -100,7 +96,7 @@ The 5-minute interval, on average across all the days in the dataset, which cont
 
         activityTimeSeries <- merge(activityTimeSeriesWD, activityTimeSeriesWE, "Time")
 
-        ggplot(activityTimeSeries, aes(x=Time, y=MeanNumberOfStepsWD), color = "red") + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") +   geom_line(aes(x=Time, y=MeanNumberOfStepsWE)) 
+        ggplot(activityTimeSeries, aes(x=Time, y=MeanNumberOfStepsWD, color = "red")) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") +   geom_line(aes(x=Time, y=MeanNumberOfStepsWE, color = "blue")) + scale_colour_discrete(name  ="dayOfWeek", breaks=c("weekday", "weekend"), labels=c("Woman", "Man")) 
 ```
 
 
