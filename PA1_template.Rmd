@@ -1,8 +1,9 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
+title: 'Reproducible Research: Peer Assessment 1'
+output:
+  pdf_document: default
   html_document:
-    keep_md: true
+    keep_md: yes
 ---
 
 #
@@ -18,7 +19,7 @@ It is now possible to collect a large amount of data about personal movement usi
 The source of the data used in this study is provided by this link 
 [https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip]
 
-```{r echo = TRUE}
+```{r echo = TRUE, results = "hide", warning = FALSE, message = FALSE}
         require(dplyr)
         require(ggplot2)
         require(data.table)
@@ -28,13 +29,13 @@ The source of the data used in this study is provided by this link
                                  header = TRUE, 
                                  na.strings = "NA",
                                  stringsAsFactors=FALSE)
-        activityDT <- data.table(activityData)
-        activityDT$date <- as.Date(activityDT$date, "%Y-%m-%d") 
-#        activityDT$interval <- minutes(activityDT$interval)
-        dayOfWeek <- weekdays(activityDT$date)
-        activityDT <- mutate(activityDT, dayOfWeek)
-        activityDT <- activityDT[which(complete.cases(activityDT)),]
-#        str(activityDT)
+
+        activityData <- data.table(activityData)
+        activityData$date <- as.Date(activityData$date, "%Y-%m-%d") 
+        dayOfWeek <- weekdays(activityData$date)
+        activityData <- mutate(activityData, dayOfWeek)
+
+        activityData <- activityData[which(complete.cases(activityData)),]
 ```
 
 
@@ -43,38 +44,22 @@ The source of the data used in this study is provided by this link
 ### The mean total number of steps taken per day
 
 ```{r}
-        meanStepsPerDay <- tapply(activityDT$steps, activityDT$date, mean)
-        sumStepsPerDay <- tapply(activityDT$steps, activityDT$date, sum)
-        hist(sumStepsPerDay, breaks = 50,
-          col = "blue", border = NULL,
-          main = "Histogram of the total number of steps taken each day",
-          xlab = "Total number of steps taken each day")
+      sumStepsPerDay <- aggregate(activityData$steps, by = list(activityData$date), sum)
+        hist(sumStepsPerDay$x, breaks = 50,
+                col = "blue", border = NULL,
+                main = "Histogram of the total number of steps taken each day",
+                xlab = "Total number of steps taken each day")
 ```
 
 The distribution of the total number of steps taken per day appear to follow normal behaviour, where the mean of the total number of steps taken per day is 
 ```{r}
-         mean(sumStepsPerDay, na.rm = TRUE)
+         mean(sumStepsPerDay$x, na.rm = TRUE)
 ```
 and median number of steps taken each day is
 
 ```{r}
-         median(sumStepsPerDay, na.rm = TRUE)
+         median(sumStepsPerDay$x, na.rm = TRUE)
 ```
-
-In order to explore the variation of the mean and median of the total number of steps taken per day
-
-```{r}
-        meanPerDay <- aggregate(activityDT$steps, by = list(activityDT$date), 
-                       mean)
-        colnames(meanPerDay) <- c("date","meanSteps")
-        medianPerDay <- aggregate(activityDT$steps, by = list(activityDT$date), 
-                       median)
-        colnames(medianPerDay) <- c("date","medianSteps")
-
-ggplot(meanPerDay, aes(x=date, y=meanSteps))  + geom_bar(stat="identity", fill="lightblue", colour="lightblue")
-       
-```
-
 
 ### The average daily activity pattern
 In order to depict the average daily activity pattern, a time series graph of the average steps through the time-span of a day, that is, the mean number of steps for each of the 5 minute time intervals over the 24 hour period, is presented.
@@ -82,12 +67,10 @@ Here the summary variable is the number of steps and the grouping variable is th
 
 ```{r}
         
-        activityTimeSeries <- aggregate(activityDT$steps, by = list(activityDT$interval), 
+        activityTimeSeries <- aggregate(activityData$steps, by = list(activityData$interval), 
                         mean)
         colnames(activityTimeSeries) <- c("Time", "MeanNumberOfSteps")
         activityTimeSeries$Time <- activityTimeSeries$Time/100 # to convert the time interval to hours
-        head(activityTimeSeries)
-        tail(activityTimeSeries)
         ggplot(activityTimeSeries, aes(x=Time, y=MeanNumberOfSteps)) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps")
 ```
 
@@ -102,28 +85,29 @@ The 5-minute interval, on average across all the days in the dataset, which cont
 
 ```{r}
         weekend <- c("Sunday","Saturday")
-        activityDTWE <- activityDT[which(dayOfWeek == weekend),]
+        activityDTWE <- activityData[which(dayOfWeek == weekend),]
         activityTimeSeriesWE <- aggregate(activityDTWE$steps, by = list(activityDTWE$interval), 
                         mean)
-        colnames(activityTimeSeriesWE) <- c("Time", "MeanNumberOfSteps")
+        colnames(activityTimeSeriesWE) <- c("Time", "MeanNumberOfStepsWE")
         activityTimeSeriesWE$Time <- activityTimeSeriesWE$Time/100 # to convert the time interval to hours
 
         weekday <- c("Monday","Tuesday", "Wednesday","Thursday","Friday")
-        activityDTWD <- activityDT[which(dayOfWeek == weekday),]
+        activityDTWD <- activityData[which(dayOfWeek == weekday),]
         activityTimeSeriesWD <- aggregate(activityDTWD$steps, by = list(activityDTWD$interval), 
                         mean)
         colnames(activityTimeSeriesWD) <- c("Time", "MeanNumberOfStepsWD")
         activityTimeSeriesWD$Time <- activityTimeSeriesWD$Time/100 # to convert the time interval to hours
 
-#        head(activityTimeSeriesWE)
-#        tail(activityTimeSeriesWE)
-        ggplot(activityTimeSeriesWD, aes(x=Time, y=MeanNumberOfStepsWD)) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") 
+        activityTimeSeries <- merge(activityTimeSeriesWD, activityTimeSeriesWE, "Time")
 
-        ggplot(activityTimeSeriesWE, aes(x=Time, y=MeanNumberOfSteps)) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") 
+        ggplot(activityTimeSeries, aes(x=Time, y=MeanNumberOfStepsWD), color = "red") + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") +   geom_line(aes(x=Time, y=MeanNumberOfStepsWE)) 
 ```
 
 
 
+```{r}
+
+```
 
 
 Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
@@ -140,7 +124,6 @@ For this part the weekdays() function may be of some help here. Use the dataset 
 
 Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 
-Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
 
 
 
