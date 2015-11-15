@@ -9,7 +9,7 @@ output:
 
 ## Introduction
 
-It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the “quantified self” movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
+Activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up, collect large amounts of data that can be used to aid the wearers ability to improve their health and understand patters in their own behavior. In this work raw data from such a device is processed in order to apply statistical methods and to gleam physical insights from the data.
 
 ## Data Processing and Analysis
 
@@ -38,7 +38,7 @@ The source of the data used in this study is provided by [here](https://d396qusz
 
 ### The mean total number of steps taken per day
 
-```{r}
+```{r echo = TRUE, results = "hide", warning = FALSE, message = FALSE}
       sumStepsPerDay <- aggregate(activityData$steps, by = list(activityData$date), sum)
         hist(sumStepsPerDay$x, breaks = 50,
                 col = "blue", border = NULL,
@@ -46,13 +46,13 @@ The source of the data used in this study is provided by [here](https://d396qusz
                 xlab = "Total number of steps taken each day")
 ```
 
-The distribution of the total number of steps taken per day appear to follow normal behaviour, where the mean of the total number of steps taken per day is `r round(mean(sumStepsPerDay$x, na.rm = TRUE),2)` and median number of steps taken each day is `r median(sumStepsPerDay$x, na.rm = TRUE)`.
-```{r}
+The distribution of the total number of steps taken per day appear to follow normal behaviour, where the mean of the total number of steps taken per day is `r mean(sumStepsPerDay$x, na.rm = TRUE)` and median number of steps taken each day is `r round(median(sumStepsPerDay$x, na.rm = TRUE), 4)`.
+```{r echo = TRUE, results = "hide", warning = FALSE, message = FALSE}
          mean(sumStepsPerDay$x, na.rm = TRUE)
 ```
 
 
-```{r}
+```{r echo = TRUE, results = "hide", warning = FALSE, message = FALSE}
          median(sumStepsPerDay$x, na.rm = TRUE)
 ```
 
@@ -74,6 +74,36 @@ The 5-minute interval, on average across all the days in the dataset, which cont
 ```{r}
         print(activityTimeSeries[which.max(activityTimeSeries$MeanNumberOfSteps),])
 ```
+
+
+### Imputing missing values
+
+https://cran.r-project.org/web/packages/zoo/vignettes/zoo-quickref.pdf
+
+http://ggvis.rstudio.com/
+
+https://cran.r-project.org/web/packages/zoo/zoo.pdf
+
+
+
+```{r}
+        numOfMissing <- sum(is.na(activityData1$steps))
+        print(numOfMissing)
+```
+
+
+There are a total of `r numOfMissing ` missing values in the dataset (i.e. the total number of rows with NAs). To handle these missing values in the dataset
+
+The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+
+
+
+
 
 
 ### The difference in activity patterns between weekdays and weekends
@@ -101,34 +131,12 @@ The graph below depicts the difference in the weekday (red plot) and weekend (bl
 
         colnames(activityTimeSeriesWD) <- c("Time", "MeanNumberOfStepsWD")
         activityTimeSeriesWD$Time <- activityTimeSeriesWD$Time/100 # to convert the time interval to hours
-# 
 
-
-#         activityTimeSeriesWE <- aggregate(activityDTWE$steps, by = list(activityDTWE$interval), 
-#                         mean)
-# 
-#         activityDTWE <- activityData[which(dayOfWeek %in% weekend),]
-
-#         activityTimeSeriesWE <- aggregate(activityDTWE$steps, by = list(activityDTWE$interval), 
-#                         mean)
-#         # to convert the time interval to hours
-# 
-#         activityDTWD <- activityData[which(dayOfWeek %in% weekday),]
-#         activityTimeSeriesWD <- aggregate(activityDTWD$steps, by = list(activityDTWD$interval), 
-#                         mean)
-# 
-         activityTimeSeries <- merge(activityTimeSeriesWD, activityTimeSeriesWE, "Time")
+        activityTimeSeries <- merge(activityTimeSeriesWD, activityTimeSeriesWE, "Time")
  
         ggplot(activityTimeSeries, aes(x=Time, y=MeanNumberOfStepsWD, color = "Weekdays")) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") +   geom_line(aes(x=Time, y=MeanNumberOfStepsWE, color = "Weekends")) + scale_colour_manual("", breaks = c("Weekdays", "Weekends"), values = c("red", "blue"))
 ```
 
-```{r}
-        numOfMissing <- sum(is.na(activityData1$steps))
-        print(numOfMissing)
-```
-
-
-There are a total of `r numOfMissing ` missing values in the dataset (i.e. the total number of rows with NAs).
 
 
 
