@@ -3,7 +3,7 @@
 
 ## Introduction
 
-Activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up, collect large amounts of data that can be used to aid the wearers ability to improve their health and understand . These type of devices are part of the “quantified self” movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. In this work raw data from such a device is processed in order to apply statistical methods and to gleam physical insights from the data.
+Activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up, collect large amounts of data that can be used to aid the wearers ability to improve their health and understand patters in their own behavior. In this work raw data from such a device is processed in order to apply statistical methods and to gleam physical insights from the data.
 
 ## Data Processing and Analysis
 
@@ -14,7 +14,6 @@ The source of the data used in this study is provided by [here](https://d396qusz
         require(dplyr)
         require(ggplot2)
         require(data.table)
-        require(scales)
         require(lubridate)
         activityData <- read.csv("activity.csv", 
                                  header = TRUE, 
@@ -72,17 +71,14 @@ Here the summary variable is the number of steps and the grouping variable is th
 ![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
 
 
-The 5-minute interval, on average across all the days in the dataset, which contains the maximum number of steps is at `r ` in the morning, as given by
+
 
 ```r
-        print(activityTimeSeries[which.max(activityTimeSeries$MeanNumberOfSteps),])
+        maxStepsInt <- which.max(activityTimeSeries$MeanNumberOfSteps)
+#        print(activityTimeSeries$Time[maxStepsInt])
 ```
 
-```
-##     Time MeanNumberOfSteps
-## 104 8.35          206.1698
-```
-
+The 5-minute interval, on average across all the days in the dataset, which contains the maximum number of steps is at 8.35 in the morning.
 
 ### Imputing missing values
 
@@ -96,10 +92,19 @@ The 5-minute interval, on average across all the days in the dataset, which cont
 ## [1] 2304
 ```
 
+```r
+        activityData1$steps[is.na(activityData1$steps)] <- round( mean(activityData1$steps, na.rm = TRUE) )
+```
 
-There are a total of 2304 missing values in the dataset (i.e. the total number of rows with NAs). To handle these missing values in the dataset
 
-The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+There are a total of 2304 missing values in the dataset (i.e. the total number of rows with NAs) specifically in the $STEPS$ column. To handle these missing values in the dataset, they are replaced by the mean number of steps of the complete dataset.
+
+
+DT <- data.table(df)
+setkey(activityData1, interval)
+
+activityData1[,steps := ifelse(is.na(steps), activityTimeSeries$MeanNumberOfSteps, steps), by = interval]
+
 
 Create a new dataset that is equal to the original dataset but with the missing data filled in.
 

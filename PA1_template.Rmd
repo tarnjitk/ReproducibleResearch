@@ -19,7 +19,6 @@ The source of the data used in this study is provided by [here](https://d396qusz
         require(dplyr)
         require(ggplot2)
         require(data.table)
-        require(scales)
         require(lubridate)
         activityData <- read.csv("activity.csv", 
                                  header = TRUE, 
@@ -64,45 +63,43 @@ Here the summary variable is the number of steps and the grouping variable is th
         
         activityTimeSeries <- aggregate(activityData$steps, by = list(activityData$interval), 
                         mean)
-        colnames(activityTimeSeries) <- c("Time", "MeanNumberOfSteps")
+        activityTimeSeries <- 
+#        colnames(activityTimeSeries) <- c("Time", "MeanNumberOfSteps")
         activityTimeSeries$Time <- activityTimeSeries$Time/100 # to convert the time interval to hours
         ggplot(activityTimeSeries, aes(x=Time, y=MeanNumberOfSteps)) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps")
 ```
 
 
-The 5-minute interval, on average across all the days in the dataset, which contains the maximum number of steps is at `r ` in the morning, as given by
+
 ```{r}
-        print(activityTimeSeries[which.max(activityTimeSeries$MeanNumberOfSteps),])
+        maxStepsInt <- which.max(activityTimeSeries$MeanNumberOfSteps)
 ```
 
+The 5-minute interval, on average across all the days in the dataset, which contains the maximum number of steps is at `r activityTimeSeries$Time[maxStepsInt]` in the morning.
 
 ### Imputing missing values
-
-https://cran.r-project.org/web/packages/zoo/vignettes/zoo-quickref.pdf
-
-http://ggvis.rstudio.com/
-
-https://cran.r-project.org/web/packages/zoo/zoo.pdf
-
-
 
 ```{r}
         numOfMissing <- sum(is.na(activityData1$steps))
         print(numOfMissing)
+
+        activityData1$steps[is.na(activityData1$steps)] <- round( mean(activityData1$steps, na.rm = TRUE) )
+
 ```
 
 
-There are a total of `r numOfMissing ` missing values in the dataset (i.e. the total number of rows with NAs). To handle these missing values in the dataset
+There are a total of `r numOfMissing ` missing values in the dataset (i.e. the total number of rows with NAs) specifically in the $STEPS$ column. To handle these missing values in the dataset, they are replaced by the mean number of steps of the complete dataset.
 
-The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+DT <- data.table(df)
+setkey(activityData1, interval)
+
+activityData1[,steps := ifelse(is.na(steps), activityTimeSeries$MeanNumberOfSteps, steps), by = interval]
+
 
 Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
 Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
-
-
-
-
 
 
 
