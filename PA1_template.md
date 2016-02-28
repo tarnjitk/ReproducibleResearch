@@ -3,7 +3,7 @@
 
 ## Introduction
 
-Activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up, collect large amounts of data that can be used to aid the wearers ability to improve their health and understand patters in their own behavior. In this work raw data from such a device is processed in order to apply statistical methods and to gleam physical insights from the data.
+Activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up, collect large amounts of data that can be used to aid the wearers' ability to improve their health and understand patters in their own behavior. In this work raw data from such a device is processed in order to apply statistical methods and to gleam physical insights from the data.
 
 ## Data Processing and Analysis
 
@@ -15,10 +15,11 @@ The source of the data used in this study is provided by [here](https://d396qusz
         require(ggplot2)
         require(data.table)
         require(lubridate)
+        require(mice)
         activityData <- read.csv("activity.csv", 
                                  header = TRUE, 
                                  na.strings = "NA",
-                                 stringsAsFactors=FALSE)
+                                 stringsAsFactors = FALSE)
 
         activityData1 <- data.table(activityData)
         activityData$date <- as.Date(activityData$date, "%Y-%m-%d") 
@@ -41,19 +42,21 @@ The source of the data used in this study is provided by [here](https://d396qusz
                 xlab = "Total number of steps taken each day")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-2-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png)
 
-The distribution of the total number of steps taken per day appear to follow normal behaviour, where the mean of the total number of steps taken per day is 1.0766189\times 10^{4} and median number of steps taken each day is 1.0765\times 10^{4}.
 
 ```r
-         mean(sumStepsPerDay$x, na.rm = TRUE)
+         meanDays <- format(mean(sumStepsPerDay$x, na.rm = TRUE), digits = 2)
 ```
 
 
 
 ```r
-         median(sumStepsPerDay$x, na.rm = TRUE)
+         medianDays <- format(median(sumStepsPerDay$x, na.rm = TRUE), digits = 2)
 ```
+
+
+The distribution of the total number of steps taken per day appear to follow normal behaviour, where the mean of the total number of steps taken per day is 10766 and median number of steps taken each day is 10765.
 
 ### The average daily activity pattern
 In order to depict the average daily activity pattern, a time series graph of the average steps through the time-span of a day, that is, the mean number of steps for each of the 5 minute time intervals over the 24 hour period, is presented.
@@ -61,110 +64,90 @@ Here the summary variable is the number of steps and the grouping variable is th
 
 
 ```r
-        activityTimeSeries <- aggregate(activityData$steps, by = list(activityData$interval), 
-                        mean)
+        activityTimeSeries <- aggregate(activityData$steps, by = list(activityData$interval), mean)
+#        activityTimeSeries <- 
         colnames(activityTimeSeries) <- c("Time", "MeanNumberOfSteps")
         activityTimeSeries$Time <- activityTimeSeries$Time/100 # to convert the time interval to hours
         ggplot(activityTimeSeries, aes(x=Time, y=MeanNumberOfSteps)) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)
 
-
-
-
-```r
-        maxStepsInt <- which.max(activityTimeSeries$MeanNumberOfSteps)
-#        print(activityTimeSeries$Time[maxStepsInt])
-```
-
-The 5-minute interval, on average across all the days in the dataset, which contains the maximum number of steps is at 8.35 in the morning.
-
-### Imputing missing values
+### Time-interval of the maximum number of steps
 
 
 ```r
-        numOfMissing <- sum(is.na(activityData1$steps))
-        print(numOfMissing)
+        maxSteps <- activityTimeSeries[which.max(activityTimeSeries$MeanNumberOfSteps),]
 ```
 
-```
-## [1] 2304
-```
+The 5-minute interval, on average across all the days in the dataset, which contains the maximum number of steps is at 8.35am.
+
+### Strategy for imputing missing data
+
 
 ```r
-        activityData1$steps[is.na(activityData1$steps)] <- round( mean(activityData1$steps, na.rm = TRUE) )
+        impute.mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
+
+        activityDataNAReplaced <- activityData1 %>%
+        group_by(interval) %>%
+            mutate(stepsNAReplaced = impute.mean(steps)
+                  )
 ```
 
+### Histogram of the total number of steps taken each day where missing values have been replaced with the mean value for that interval
 
-There are a total of 2304 missing values in the dataset (i.e. the total number of rows with NAs) specifically in the $STEPS$ column. To handle these missing values in the dataset, they are replaced by the mean number of steps of the complete dataset.
-
-
-DT <- data.table(df)
-setkey(activityData1, interval)
-
-activityData1[,steps := ifelse(is.na(steps), activityTimeSeries$MeanNumberOfSteps, steps), by = interval]
-
-
-Create a new dataset that is equal to the original dataset but with the missing data filled in.
-
-Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
-
-
-
-
-
-
-
-### The difference in activity patterns between weekdays and weekends
-
-The graph below depicts the difference in the weekday (red plot) and weekend (blue) activity patterns.
 
 ```r
-        WE <- c("Sunday","Saturday")
-        WD <- c("Monday","Tuesday", "Wednesday","Thursday","Friday")
-
-        dayType <- ifelse(activityData$dayOfWeek %in% WD, "weekday", "weekend")
-        activityData <- cbind(activityData, dayType)
-  
-         activityDataWD <- filter(activityData, activityData$dayType == "weekday")
- 
-         activityDataWE <- filter(activityData, activityData$dayType == "weekend")
- 
-        activityTimeSeriesWD <- aggregate(activityDataWD$steps, 
-                         by = list(activityDataWD$interval), mean)
- 
-        activityTimeSeriesWE <- aggregate(activityDataWE$steps, 
-                        by = list(activityDataWE$interval), mean)
-
-        colnames(activityTimeSeriesWE) <- c("Time", "MeanNumberOfStepsWE")
-        activityTimeSeriesWE$Time <- activityTimeSeriesWE$Time/100 
-
-        colnames(activityTimeSeriesWD) <- c("Time", "MeanNumberOfStepsWD")
-        activityTimeSeriesWD$Time <- activityTimeSeriesWD$Time/100 # to convert the time interval to hours
-
-        activityTimeSeries <- merge(activityTimeSeriesWD, activityTimeSeriesWE, "Time")
- 
-        ggplot(activityTimeSeries, aes(x=Time, y=MeanNumberOfStepsWD, color = "Weekdays")) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") +   geom_line(aes(x=Time, y=MeanNumberOfStepsWE, color = "Weekends")) + scale_colour_manual("", breaks = c("Weekdays", "Weekends"), values = c("red", "blue"))
+        sumStepsPerDayMissingReplaced <-    
+                aggregate(activityDataNAReplaced$stepsNAReplaced, 
+                          by = list(activityDataNAReplaced$date), sum)
+        hist(sumStepsPerDayMissingReplaced$x, breaks = 50,
+                col = "red", border = NULL,
+                main = "Histogram of the total number of steps taken each day",
+                xlab = "Total number of steps taken each day")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)
+
+### Comparison of the average number of steps taken per 5-minute interval across weekdays and weekends
 
 
+```r
+        activityDataNAReplaced$date <- as.Date(activityDataNAReplaced$date, "%Y-%m-%d") 
+        dayOfWeekNA <- weekdays(activityDataNAReplaced$date)
+        activityDataNAReplaced <- cbind(activityDataNAReplaced, dayOfWeekNA)
+        
+        weekend <- c("Sunday","Saturday")
+        weekend <- factor(weekend)
+        activityDTWE <- filter(activityDataNAReplaced, dayOfWeekNA %in% weekend)
+        activityTimeSeriesWE <- aggregate(activityDTWE$stepsNAReplaced, by = list(activityDTWE$interval), 
+                        mean)
+        activityTimeSeriesWE <- mutate(activityTimeSeriesWE, DayType = "weekend")
+        
+        weekday <- c("Monday","Tuesday","Wednesday","Thursday","Friday")
+        weekday <- factor(weekday)
+        
+         
+        activityDTWD <- filter(activityDataNAReplaced, dayOfWeekNA %in% weekday)
+        
+        activityTimeSeriesWD <- aggregate(activityDTWD$stepsNAReplaced, by = list(activityDTWD$interval), 
+                        mean)
+        
+        typeOfDay <- c("weekday", "weekend")
+        typeOfDay <- factor(typeOfDay)
+        
+        activityTimeSeriesWD <- mutate(activityTimeSeriesWD, DayType = "weekday")
+        
+ 
+        activityTimeSeriesNA <- rbind(activityTimeSeriesWD, activityTimeSeriesWE)
+        
+        colnames(activityTimeSeriesNA) <- c("Time", "MeanNumberOfSteps", "DayType")
+        
+        activityTimeSeriesNA$Time <- activityTimeSeriesNA$Time/100 # to convert the time interval to hours
 
+        
+        ggplot(activityTimeSeriesNA, aes(x = Time, y = MeanNumberOfSteps, color = DayType)) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") + facet_grid(DayType ~ .)
+```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)
 
