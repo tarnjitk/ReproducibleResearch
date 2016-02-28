@@ -1,4 +1,4 @@
-# Reproducible Research: Peer Assessment 1
+# Analysis of data from a daily activity monitoring device
 
 
 ## Introduction
@@ -59,6 +59,7 @@ The source of the data used in this study is provided by [here](https://d396qusz
 The distribution of the total number of steps taken per day appear to follow normal behaviour, where the mean of the total number of steps taken per day is 10766 and median number of steps taken each day is 10765.
 
 ### The average daily activity pattern
+
 In order to depict the average daily activity pattern, a time series graph of the average steps through the time-span of a day, that is, the mean number of steps for each of the 5 minute time intervals over the 24 hour period, is presented.
 Here the summary variable is the number of steps and the grouping variable is the interval.
 
@@ -84,6 +85,7 @@ The 5-minute interval, on average across all the days in the dataset, which cont
 
 ### Strategy for imputing missing data
 
+Missing data have been replaced by the mean value for that 5-minute interval.
 
 ```r
         impute.mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
@@ -144,10 +146,14 @@ The 5-minute interval, on average across all the days in the dataset, which cont
         colnames(activityTimeSeriesNA) <- c("Time", "MeanNumberOfSteps", "DayType")
         
         activityTimeSeriesNA$Time <- activityTimeSeriesNA$Time/100 # to convert the time interval to hours
+```
 
-        
+In comparing the average activity behaviour between weekdays and weekends distinctly contrasting behaviour is observed as shown in the panel plot below. Except for the intense activity in the morning interval of approximately $~2$hours, the weekdays, on average, appear to be sedentary whereas on the weekends there is more activity throughout the day.
+
+
+```r
         ggplot(activityTimeSeriesNA, aes(x = Time, y = MeanNumberOfSteps, color = DayType)) + geom_line() + xlab("Time(Hours)") + ylab("Mean number of steps") + facet_grid(DayType ~ .)
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)
 
